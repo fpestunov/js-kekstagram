@@ -41,7 +41,7 @@
 
   // Открытие/закрытие формы загрузки изображения
 
-  var editWindowCloseClickHandler = function() {
+  var onClickEditWindowClose = function() {
     uploadFormElements.editWindow.classList.add("hidden");
     uploadFormElements.uploadFile.value = null;
     imgPreview.style.filter = "none";
@@ -49,7 +49,7 @@
     setSizePreviewImg();
     uploadFormElements.closeButton.removeEventListener(
       "click",
-      editWindowCloseClickHandler
+      onClickEditWindowClose
     );
     uploadFormElements.closeButton.removeEventListener(
       "keydown",
@@ -70,12 +70,12 @@
       evt.target !== uploadFormElements.hashtagsInput &&
       evt.target !== uploadFormElements.descriptionTextarea
     ) {
-      window.util.isEsc(evt, editWindowCloseClickHandler);
+      window.util.isEsc(evt, onClickEditWindowClose);
     }
   };
 
   var onEnterEditWindowClose = function(evt) {
-    window.util.isEntr(evt, editWindowCloseClickHandler);
+    window.util.isEntr(evt, onClickEditWindowClose);
   };
 
   uploadFormElements.uploadFile.addEventListener("change", function() {
@@ -88,7 +88,7 @@
 
     uploadFormElements.closeButton.addEventListener(
       "click",
-      editWindowCloseClickHandler
+      onClickEditWindowClose
     );
     uploadFormElements.closeButton.addEventListener(
       "keydown",
