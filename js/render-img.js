@@ -1,8 +1,6 @@
 "use strict";
 
 (function() {
-  window.photos = [];
-
   var pictureTemplate = document
     .querySelector("#picture")
     .content.querySelector(".picture");
@@ -27,23 +25,15 @@
     return pictureElement;
   };
 
-  var getFragment = function(data) {
-    var fragment = document.createDocumentFragment();
-
-    for (var i = 0; i < data.length; i++) {
-      fragment.appendChild(renderPicture(data[i], i));
+  window.render = function(data) {
+    var photos = picturesListElement.querySelectorAll(".picture");
+    if (photos.length > 0) {
+      window.util.clearElements(picturesListElement, photos);
     }
-    picturesListElement.appendChild(fragment);
+    for (var i = 0; i < data.length; i++) {
+      picturesListElement.appendChild(
+        window.util.getFragment(renderPicture(data[i], i))
+      );
+    }
   };
-
-  var onSuccess = function(images) {
-    getFragment(images);
-    window.photos = images;
-  };
-
-  var onError = function(errorMessage) {
-    window.errorWindow(errorMessage);
-  };
-
-  window.load(onSuccess, onError);
 })();

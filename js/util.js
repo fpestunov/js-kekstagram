@@ -14,8 +14,20 @@
     },
     isEntr: function(evt, action) {
       if (evt.keyCode === ENTER_KEYCODE) {
-        action();
+        action(evt);
       }
-    }
+    },
+    getFragment: function(renderFragment) {
+      var fragment = document.createDocumentFragment();
+      fragment.appendChild(renderFragment);
+      return fragment;
+    },
+    clearElements: function(parrentElement, deletedElements) {
+      for (var i = 0; i < deletedElements.length; i++) {
+        parrentElement.removeChild(deletedElements[i]);
+      }
+    },
+
+    placeForIncert: document.querySelector("main")
   };
 })();

@@ -2,6 +2,9 @@
 
 (function() {
   var DEFAULT_SCALE_VALUE = 100;
+  var ARROW_LEFT = 37;
+  var ARROW_RIGHT = 39;
+
   var uploadForm = document.querySelector(".img-upload__form");
   var uploadFormElements = {
     uploadFile: uploadForm.querySelector("#upload-file"),
@@ -9,30 +12,19 @@
     closeButton: uploadForm.querySelector(".img-upload__cancel"),
     hashtagsInput: uploadForm.querySelector(".text__hashtags"),
     descriptionTextarea: uploadForm.querySelector(".text__description"),
-    scaleControlSmaller: uploadForm.querySelector(".scale__control--smaller"),
     scaleControlValue: uploadForm.querySelector(".scale__control--value"),
-    scaleControlBigger: uploadForm.querySelector(".scale__control--bigger"),
     slideOfEffectLevel: uploadForm.querySelector(".img-upload__effect-level")
   };
-  var scaleValue = DEFAULT_SCALE_VALUE;
 
-  var imgUploadPreview = uploadForm.querySelector(".img-upload__preview");
-  var imgPreview = imgUploadPreview.querySelector("img");
-  var imgUploadEffects = uploadForm.querySelector(".img-upload__effects");
+  var scaleValue = DEFAULT_SCALE_VALUE;
   var currentEffect = "none";
 
-  var controlsEffect = {
-    valueInput: uploadFormElements.slideOfEffectLevel.querySelector(
-      ".effect-level__value"
-    ),
-    pinContainer: uploadForm.querySelector(".img-upload__preview-container"),
-    pinLine: uploadForm.querySelector(".effect-level"),
-    pin: uploadFormElements.slideOfEffectLevel.querySelector(
-      ".effect-level__pin"
-    ),
-    line: uploadForm.querySelector(".effect-level__line"),
-    effectLine: uploadForm.querySelector(".effect-level__depth")
-  };
+  var imgPreview = uploadForm.querySelector("img");
+  var imgUploadEffects = uploadForm.querySelector(".img-upload__effects");
+
+  var effectLevelPin = uploadForm.querySelector(".effect-level__pin");
+  var effectLevelValue = uploadForm.querySelector(".effect-level__value");
+  var effectLevelDeepth = uploadForm.querySelector(".effect-level__depth");
 
   var setSizePreviewImg = function() {
     uploadFormElements.scaleControlValue.value = scaleValue + "%";
@@ -40,13 +32,8 @@
   };
 
   // Открытие/закрытие формы загрузки изображения
-
   var onClickEditWindowClose = function() {
     uploadFormElements.editWindow.classList.add("hidden");
-    uploadFormElements.uploadFile.value = null;
-    imgPreview.style.filter = "none";
-    scaleValue = DEFAULT_SCALE_VALUE;
-    setSizePreviewImg();
     uploadFormElements.closeButton.removeEventListener(
       "click",
       onClickEditWindowClose
@@ -56,13 +43,24 @@
       onEnterEditWindowClose
     );
     document.removeEventListener("keydown", onEscEditWindow);
-    uploadForm.removeEventListener("click", changeScaleImgClickHandler);
+    uploadForm.removeEventListener("click", onChangeScaleImg);
     uploadForm.removeEventListener("keydown", onEntrChangeScaleImg);
-    controlsEffect.pin.removeEventListener("mousedown", ChangeDepthEffect);
+    effectLevelPin.removeEventListener("mousedown", ChangeDepthEffect);
+    effectLevelPin.removeEventListener("mousedown", onKeyChangeDepthEffect);
+    imgUploadEffects.removeEventListener("change", selectEffect);
+
     uploadFormElements.hashtagsInput.removeEventListener(
       "input",
       window.getValidity
     );
+
+    // Установка первоначальных значений
+    uploadFormElements.hashtagsInput.value = null;
+    uploadFormElements.descriptionTextarea.value = null;
+    uploadFormElements.uploadFile.value = null;
+    imgPreview.style.filter = "none";
+    scaleValue = DEFAULT_SCALE_VALUE;
+    setSizePreviewImg();
   };
 
   var onEscEditWindow = function(evt) {
@@ -81,6 +79,7 @@
   uploadFormElements.uploadFile.addEventListener("change", function() {
     uploadFormElements.editWindow.classList.remove("hidden");
     uploadFormElements.scaleControlValue.value = DEFAULT_SCALE_VALUE + "%";
+    effectLevelPin.setAttribute("tabindex", "0");
     var effectsValue = imgPreview.classList;
     if (effectsValue.length > 0) {
       imgPreview.classList.remove(effectsValue);
@@ -97,29 +96,54 @@
 
     document.addEventListener("keydown", onEscEditWindow);
 
-    uploadForm.addEventListener("click", changeScaleImgClickHandler);
+    uploadForm.addEventListener("click", onChangeScaleImg);
     uploadForm.addEventListener("keydown", onEntrChangeScaleImg);
 
     uploadFormElements.slideOfEffectLevel.classList.add("hidden");
-    selectEffect();
-    controlsEffect.pin.addEventListener("mousedown", ChangeDepthEffect);
+    imgUploadEffects.addEventListener("change", selectEffect);
+    effectLevelPin.addEventListener("mousedown", ChangeDepthEffect);
+    effectLevelPin.addEventListener("keydown", onKeyChangeDepthEffect);
     uploadFormElements.hashtagsInput.addEventListener(
       "input",
       window.getValidity
     );
+    uploadForm.addEventListener("submit", sendForm);
   });
 
-  // Маштабирование изображения
+  // Отправка формы на сервер
+  var onSave = function() {
+    onClickEditWindowClose();
+    window.messages.successWindow();
+    window.controlPopup.successWindow();
+  };
 
-  var changeScaleImgClickHandler = function(evt) {
+  var onError = function(message) {
+    onClickEditWindowClose();
+    window.messages.errorWindow(message, true);
+    window.controlPopup.errorWindow();
+  };
+
+  var sendForm = function(evt) {
+    window.backend.save(new FormData(uploadForm), onSave, onError);
+    evt.preventDefault();
+  };
+
+  // Маштабирование изображения
+  var onChangeScaleImg = function(evt) {
     scaleValue = parseInt(uploadFormElements.scaleControlValue.value, 10);
+    var scaleControlSmaller = uploadForm.querySelector(
+      ".scale__control--smaller"
+    );
+    var scaleControlBigger = uploadForm.querySelector(
+      ".scale__control--bigger"
+    );
 
     var target = evt.target;
-    if (target === uploadFormElements.scaleControlSmaller) {
+    if (target === scaleControlSmaller) {
       scaleValue = scaleValue - 25 > 25 ? (scaleValue -= 25) : 25;
     }
 
-    if (target === uploadFormElements.scaleControlBigger) {
+    if (target === scaleControlBigger) {
       scaleValue = scaleValue + 25 < 100 ? (scaleValue += 25) : 100;
     }
 
@@ -127,39 +151,34 @@
   };
 
   var onEntrChangeScaleImg = function(evt) {
-    window.util.isEntr(evt, changeScaleImgClickHandler);
+    window.util.isEntr(evt, onChangeScaleImg);
   };
 
   // Наложение эффекта
+  var selectEffect = function(evt) {
+    var target = evt.target;
+    var effectsValue = imgPreview.classList;
 
-  var selectEffect = function() {
-    imgUploadEffects.addEventListener("change", function(evt) {
-      var target = evt.target;
-      var effectsValue = imgPreview.classList;
+    if (effectsValue.length > 0) {
+      imgPreview.classList.remove(effectsValue);
+    }
 
-      if (effectsValue.length > 0) {
-        imgPreview.classList.remove(effectsValue);
-      }
-
-      if (target.value !== "none") {
-        var effectClass = "effects__preview--" + target.value;
-        imgPreview.classList.add(effectClass);
-        controlsEffect.valueInput.value = 100;
-        controlsEffect.pin.style.left = controlsEffect.valueInput.value + "%";
-        controlsEffect.effectLine.style.width =
-          controlsEffect.valueInput.value + "%";
-        uploadFormElements.slideOfEffectLevel.classList.remove("hidden");
-      } else if (target.value === "none") {
-        uploadFormElements.slideOfEffectLevel.classList.add("hidden");
-      }
-      currentEffect = target.value;
-      setEffectValue(target.value, controlsEffect.valueInput.value);
-    });
+    if (target.value !== "none") {
+      var effectClass = "effects__preview--" + target.value;
+      imgPreview.classList.add(effectClass);
+      effectLevelValue.value = 100;
+      effectLevelPin.style.left = effectLevelValue.value + "%";
+      effectLevelDeepth.style.width = effectLevelValue.value + "%";
+      uploadFormElements.slideOfEffectLevel.classList.remove("hidden");
+    } else if (target.value === "none") {
+      uploadFormElements.slideOfEffectLevel.classList.add("hidden");
+    }
+    currentEffect = target.value;
+    setEffectValue(currentEffect, effectLevelValue.value);
   };
 
   // изменение глубины эффекта
-
-  var setEffectValue = function(effectName, value) {
+  var setEffectValue = window.debounce(function(effectName, value) {
     var propertyEffect = "none";
 
     switch (effectName) {
@@ -191,30 +210,37 @@
         break;
     }
     imgPreview.style.filter = propertyEffect;
-  };
+  });
 
-  // Изменение глубины эффекта
-  var getCoords = function(element, evt) {
-    var rect = element.getBoundingClientRect();
-    return {
-      x: evt.clientX - rect.left,
-      y: evt.clientY - rect.top
-    };
+  // Перемещение пина
+  var setEffectAttribute = function(value) {
+    effectLevelPin.style.left = value + "%";
+    effectLevelDeepth.style.width = value + "%";
+    effectLevelValue.setAttribute("value", value);
   };
 
   var ChangeDepthEffect = function(evt) {
     evt.preventDefault();
+
+    var getCoords = function(element, evtCoords) {
+      var rect = element.getBoundingClientRect();
+      return {
+        x: evtCoords.clientX - rect.left,
+        y: evtCoords.clientY - rect.top
+      };
+    };
 
     var target = evt.target;
     var shifts = getCoords(target, evt);
 
     var onMouseMove = function(moveEvt) {
       moveEvt.preventDefault();
+      var effectLevelLine = uploadForm.querySelector(".effect-level__line");
 
-      var coords = getCoords(controlsEffect.line, moveEvt);
+      var coords = getCoords(effectLevelLine, moveEvt);
       var value = Math.ceil(
         ((coords.x + target.offsetWidth / 2 - shifts.x) /
-          controlsEffect.line.offsetWidth) *
+          effectLevelLine.offsetWidth) *
           100
       );
 
@@ -225,9 +251,7 @@
         value = 100;
       }
 
-      controlsEffect.pin.style.left = value + "%";
-      controlsEffect.effectLine.style.width = value + "%";
-      controlsEffect.valueInput.setAttribute("value", value);
+      setEffectAttribute(value);
       setEffectValue(currentEffect, value);
     };
 
@@ -240,5 +264,32 @@
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
+  };
+
+  var onKeyChangeDepthEffect = function(evt) {
+    var attributeValue = effectLevelPin.style.left;
+    var value = Number(attributeValue.slice(0, attributeValue.indexOf("%")));
+
+    switch (evt.keyCode) {
+      case ARROW_RIGHT:
+        value = value + 1;
+
+        if (value > 100) {
+          value = 100;
+        }
+        break;
+      case ARROW_LEFT:
+        value = value - 1;
+
+        if (value < 0) {
+          value = 0;
+        }
+        break;
+      default:
+        break;
+    }
+
+    setEffectAttribute(value);
+    setEffectValue(currentEffect, value);
   };
 })();
