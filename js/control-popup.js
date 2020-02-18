@@ -6,7 +6,7 @@
   };
 
   window.controlPopup = {
-    errorWindow: function() {
+    controlErrorWindow: function() {
       var errorContainer = document.querySelector(".error");
       var errorBlock = errorContainer.querySelector(".error__inner");
       var errorButton = errorContainer.querySelector(".error__button");
@@ -42,7 +42,7 @@
       errorButton.addEventListener("keydown", onEnterErrorButton);
     },
 
-    successWindow: function() {
+    controlSuccessWindow: function() {
       var successContainer = document.querySelector(".success");
       var successBlock = successContainer.querySelector(".success__inner");
       var successButton = successContainer.querySelector(".success__button");

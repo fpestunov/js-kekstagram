@@ -14,7 +14,7 @@
     .content.querySelector(".img-upload__message--loading");
 
   window.messages = {
-    errorWindow: function(message, statusButton) {
+    openErrorWindow: function(message, statusButton) {
       var errorElement = errorTemplate.cloneNode(true);
       errorElement.querySelector(".error__title").textContent = message;
       if (statusButton === false) {
@@ -25,14 +25,14 @@
       );
     },
 
-    successWindow: function() {
+    openSuccessWindow: function() {
       var successElement = successTemplate.cloneNode(true);
       window.util.placeForIncert.appendChild(
         window.util.getFragment(successElement)
       );
     },
 
-    loadWindow: function() {
+    openLoadWindow: function() {
       var loadWindow = loadTemplate.cloneNode(true);
       window.util.placeForIncert.appendChild(
         window.util.getFragment(loadWindow)

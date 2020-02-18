@@ -2,13 +2,13 @@
 
 (function() {
   var FILE_TYPES = ["gif", "jpeg", "jpg", "png"];
-
   var fileChooser = document.querySelector(".img-upload__input");
-  var previewContainer = document.querySelector(".img-upload__preview");
-  var preview = previewContainer.querySelector("img");
-  var effectsPreviewItems = document.querySelectorAll(".effects__preview");
 
   fileChooser.addEventListener("change", function() {
+    var previewContainer = document.querySelector(".img-upload__preview");
+    var preview = previewContainer.querySelector("img");
+    var effectsPreviewItems = document.querySelectorAll(".effects__preview");
+
     var file = fileChooser.files[0];
     var fileName = file.name.toLowerCase();
 

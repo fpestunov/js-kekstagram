@@ -113,14 +113,14 @@
   // Отправка формы на сервер
   var onSave = function() {
     onClickEditWindowClose();
-    window.messages.successWindow();
-    window.controlPopup.successWindow();
+    window.messages.openSuccessWindow();
+    window.controlPopup.controlSuccessWindow();
   };
 
   var onError = function(message) {
     onClickEditWindowClose();
-    window.messages.errorWindow(message, true);
-    window.controlPopup.errorWindow();
+    window.messages.openErrorWindow(message, true);
+    window.controlPopup.controlErrorWindow();
   };
 
   var sendForm = function(evt) {

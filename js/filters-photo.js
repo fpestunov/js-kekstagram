@@ -1,11 +1,7 @@
 "use strict";
 
 (function() {
-  var imgFilters = document.querySelector(".img-filters");
-  imgFilters.classList.remove("img-filters--inactive");
-
-  var filtersList = imgFilters.querySelectorAll(".img-filters__button");
-
+  var COUNT_RANDOM_PHOTO = 10;
   var compare = function(a, b) {
     if (b.comments.length - a.comments.length === 0) {
       return b.likes - a.likes;
@@ -14,6 +10,7 @@
     }
   };
 
+  var imgFilters = document.querySelector(".img-filters");
   window.photos = [];
 
   var updatePhotos = window.debounce(function(value) {
@@ -22,7 +19,7 @@
     switch (value) {
       case "filter-random":
         filteredPhotos = [];
-        while (filteredPhotos.length < 10) {
+        while (filteredPhotos.length < COUNT_RANDOM_PHOTO) {
           var randomValue =
             window.photos[window.util.getRandomValue(window.photos.length)];
           if (filteredPhotos.indexOf(randomValue) === -1) {
@@ -42,6 +39,7 @@
 
   var onClickButton = function(evt) {
     var target = evt.target;
+    var filtersList = imgFilters.querySelectorAll(".img-filters__button");
 
     if (!target.classList.contains("img-filters__button--active")) {
       for (var i = 0; i < filtersList.length; i++) {
@@ -60,10 +58,11 @@
   var onSuccess = function(images) {
     window.photos = images;
     window.render(window.photos);
+    imgFilters.classList.remove("img-filters--inactive");
   };
 
   var onError = function(errorMessage) {
-    window.messages.errorWindow(errorMessage, false);
+    window.messages.openErrorWindow(errorMessage, false);
   };
 
   window.backend.load(onSuccess, onError);
